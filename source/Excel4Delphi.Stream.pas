@@ -9085,57 +9085,61 @@ var
         _r, _c: Integer;
         _t: Integer;
         i: TZBordersPos;
+        ReadHelper: TZEXLSXReadHelper;
       begin
-        // _currSheet
-        Result := -1;
-        if ((dfNum >= 0)
-        // and (dfNum < ReadHelper.DiffFormatting.Count))
-          ) then
-        begin
-          // _df := ReadHelper.DiffFormatting[dfNum];
-          _t := -1;
-
-          if (_CF.Areas.Count > 0) then
+        ReadHelper := TZEXLSXReadHelper.Create;
+        try
+          // _currSheet
+          Result := -1;
+          if ((dfNum >= 0) and (dfNum < ReadHelper.DiffFormatting.Count))then
           begin
-            _r := _CF.Areas.Items[0].Row;
-            _c := _CF.Areas.Items[0].Column;
-            if ((_r >= 0) and (_r < currentSheet.RowCount)) then
-              if ((_c >= 0) and (_c < currentSheet.ColCount)) then
-                _t := currentSheet.Cell[_c, _r].CellStyle;
-          end;
+             _df := ReadHelper.DiffFormatting[dfNum];
+            _t := -1;
 
-          _tmpStyle.Assign(FWorkBook.Styles[_t]);
-
-          if (_df.UseFont) then
-          begin
-            if (_df.UseFontStyles) then
-              _tmpStyle.Font.Style := _df.FontStyles;
-            if (_df.UseFontColor) then
-              _tmpStyle.Font.Color := _df.FontColor;
-          end;
-          if (_df.UseFill) then
-          begin
-            if (_df.UseCellPattern) then
-              _tmpStyle.CellPattern := _df.CellPattern;
-            if (_df.UseBGColor) then
-              _tmpStyle.BGColor := _df.BGColor;
-            if (_df.UsePatternColor) then
-              _tmpStyle.PatternColor := _df.PatternColor;
-          end;
-          if (_df.UseBorder) then
-            for i := bpLeft to bpDiagonalRight do
+            if (_CF.Areas.Count > 0) then
             begin
-              if (_df.Borders[i].UseStyle) then
-              begin
-                _tmpStyle.Border[i].Weight := _df.Borders[i].Weight;
-                _tmpStyle.Border[i].LineStyle := _df.Borders[i].LineStyle;
-              end;
-              if (_df.Borders[i].UseColor) then
-                _tmpStyle.Border[i].Color := _df.Borders[i].Color;
-            end; // for
+              _r := _CF.Areas.Items[0].Row;
+              _c := _CF.Areas.Items[0].Column;
+              if ((_r >= 0) and (_r < currentSheet.RowCount)) then
+                if ((_c >= 0) and (_c < currentSheet.ColCount)) then
+                  _t := currentSheet.Cell[_c, _r].CellStyle;
+            end;
 
-          Result := FWorkBook.Styles.Add(_tmpStyle, true);
-        end; // if
+            _tmpStyle.Assign(FWorkBook.Styles[_t]);
+
+            if (_df.UseFont) then
+            begin
+              if (_df.UseFontStyles) then
+                _tmpStyle.Font.Style := _df.FontStyles;
+              if (_df.UseFontColor) then
+                _tmpStyle.Font.Color := _df.FontColor;
+            end;
+            if (_df.UseFill) then
+            begin
+              if (_df.UseCellPattern) then
+                _tmpStyle.CellPattern := _df.CellPattern;
+              if (_df.UseBGColor) then
+                _tmpStyle.BGColor := _df.BGColor;
+              if (_df.UsePatternColor) then
+                _tmpStyle.PatternColor := _df.PatternColor;
+            end;
+            if (_df.UseBorder) then
+              for i := bpLeft to bpDiagonalRight do
+              begin
+                if (_df.Borders[i].UseStyle) then
+                begin
+                  _tmpStyle.Border[i].Weight := _df.Borders[i].Weight;
+                  _tmpStyle.Border[i].LineStyle := _df.Borders[i].LineStyle;
+                end;
+                if (_df.Borders[i].UseColor) then
+                  _tmpStyle.Border[i].Color := _df.Borders[i].Color;
+              end; // for
+
+            Result := FWorkBook.Styles.Add(_tmpStyle, true);
+          end; // if
+        finally
+          ReadHelper.Free;
+        end;
       end; // _getStyleIdxForDF
 
     begin
