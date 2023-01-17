@@ -60,7 +60,7 @@ uses
   {$IFDEF MSWINDOWS}
   Winapi.windows,
   {$ENDIF}
-  System.DateUtils, System.IOUtils;
+  System.DateUtils, System.IOUtils, System.NetEncoding;
 
 function FileCreateTemp(var tempName: string): THandle;
 {$IFNDEF MSWINDOWS}
@@ -145,76 +145,8 @@ end;
 // RETURN
 // string - обработанная строка
 function ZEReplaceEntity(const st: string): string;
-var
-  s, s1: string;
-  i: integer;
-  isAmp: boolean;
-  ch: char;
-
-  procedure CheckS();
-  begin
-    s1 := UpperCase(s);
-    if (s1 = '&GT;') then
-      s := '>'
-    else if (s1 = '&LT;') then
-      s := '<'
-    else if (s1 = '&AMP;') then
-      s := '&'
-    else if (s1 = '&APOS;') then
-      s := ''''
-    else if (s1 = '&QUOT;') then
-      s := '"';
-  end; // _checkS
-
 begin
-  s := '';
-  Result := '';
-  isAmp := false;
-  for i := 1 to length(st) do
-  begin
-    ch := st[i];
-    case ch of
-      '&':
-        begin
-          if (isAmp) then
-          begin
-            Result := Result + s;
-            s := ch;
-          end
-          else
-          begin
-            isAmp := true;
-            s := ch;
-          end;
-        end;
-      ';':
-        begin
-          if (isAmp) then
-          begin
-            s := s + ch;
-            CheckS();
-            Result := Result + s;
-            s := '';
-            isAmp := false;
-          end
-          else
-          begin
-            Result := Result + s + ch;
-            s := '';
-          end;
-        end;
-    else
-      if (isAmp) then
-        s := s + ch
-      else
-        Result := Result + ch;
-    end; // case
-  end; // for
-  if (s > '') then
-  begin
-    CheckS();
-    Result := Result + s;
-  end;
+  Result := TNetEncoding.HTML.Decode(st);
 end; // ZEReplaceEntity
 
 // Переводит строку в boolean
