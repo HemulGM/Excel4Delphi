@@ -9,7 +9,7 @@ uses
   {$ELSE}
   VCL.Graphics,
   {$ENDIF}
-  System.UITypes, Windows, System.Zip, System.IOUtils, Excel4Delphi.Formula,
+  System.UITypes,  System.Zip, System.IOUtils, Excel4Delphi.Formula,
   Excel4Delphi.Xml, Excel4Delphi, Excel4Delphi.Common,
   System.Generics.Collections;
 
