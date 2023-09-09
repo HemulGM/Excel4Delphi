@@ -58,15 +58,14 @@ implementation
 
 uses
   {$IFDEF MSWINDOWS}
-  Winapi.windows,
+  Winapi.Windows,
+  {$ENDIF}
+  {$IFDEF POSIX}
+  Posix.Unistd,
   {$ENDIF}
   System.DateUtils, System.IOUtils, System.NetEncoding;
 
 function FileCreateTemp(var tempName: string): THandle;
-{$IFNDEF MSWINDOWS}
-var
-  FS: TFileStream;
-{$ENDIF}
 begin
   Result := INVALID_HANDLE_VALUE;
   tempName := TPath.GetTempFileName();

@@ -9,7 +9,7 @@ uses
   {$ELSE}
   VCL.Graphics,
   {$ENDIF}
-  System.UITypes, Windows, System.Zip, System.IOUtils, Excel4Delphi.Formula,
+  System.UITypes, System.Zip, System.IOUtils, Excel4Delphi.Formula,
   Excel4Delphi.Xml, Excel4Delphi, Excel4Delphi.Common,
   System.Generics.Collections;
 
@@ -4230,11 +4230,11 @@ var
 begin
   for i := 0 to FilesCount - 1 do
   begin
-    k := length(FileArray[i].name);
+    k := Length(FileArray[i].name);
     if (k > 1) then
     begin
       if (FileArray[i].name[1] = '/') then
-        delete(FileArray[i].name, 1, 1);
+        Delete(FileArray[i].name, 1, 1);
       if (PathDelim <> '/') then
         for j := 1 to k - 1 do
           if (FileArray[i].name[j] = '/') then
