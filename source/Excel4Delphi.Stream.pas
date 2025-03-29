@@ -364,7 +364,7 @@ function ZEXSLXReadContentTypes(var Stream: TStream; var FileArray: TArray<TZXLS
 
 function ZEXSLXReadSharedStrings(var Stream: TStream; out StrArray: TStringDynArray; out StrCount: Integer): Boolean;
 
-function ZEXSLXReadStyles(var XMLSS: TZWorkBook; var Stream: TStream; var ThemaFillsColors: TIntegerDynArray; var ThemaColorCount: Integer; var MaximumDigitWidth: double; ReadHelper: TZEXLSXReadHelper): Boolean;
+function ZEXSLXReadStyles(var XMLSS: TZWorkBook; var Stream: TStream; var ThemaFillsColors: TIntegerDynArray; var ThemaColorCount: Integer; ReadHelper: TZEXLSXReadHelper): Boolean;
 
 function ZE_XSLXReadRelationships(var Stream: TStream; var Relations: TZXLSXRelationsArray; var RelationsCount: Integer; var isWorkSheet: Boolean; needReplaceDelimiter: Boolean): Boolean;
 
@@ -526,37 +526,6 @@ const
     name: 'application/vnd.openxmlformats-officedocument.drawing+xml';
     rel: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing'
   ));
-
-function GetMaximumDigitWidth(fontName: string; fontsize: double): double;
-const
-  numbers = '0123456789';
-begin
-  // А.А.Валуев Расчитываем ширину самого широкого числа.
-  Result := 0;
-  {$IFDEF FMX}
-  var bitmap := FMX.Graphics.TBitmap.Create;
-  bitmap.Canvas.Font.Family := fontName;
-  try
-    bitmap.Canvas.Font.Size := Trunc(fontsize);
-    for var number in numbers do
-      Result := Max(Result, bitmap.Canvas.TextWidth(number));
-  finally
-    bitmap.Free;
-  end;
-  {$ENDIF}
-  {$IFDEF VCL}
-  var bitmap := VCL.Graphics.TBitmap.Create;
-  bitmap.Canvas.Font.PixelsPerInch := 96;
-  bitmap.Canvas.Font.name := fontName;
-  try
-    bitmap.Canvas.Font.Size := Trunc(fontsize);
-    for var number in numbers do
-      Result := Max(Result, bitmap.Canvas.TextWidth(number));
-  finally
-    bitmap.Free;
-  end;
-  {$ENDIF}
-end;
 
 /// /:::::::::::::  TZXLSXDiffFormating :::::::::::::::::////
 
@@ -2741,7 +2710,7 @@ end; // ZEXSLXReadSheet
 // RETURN
 // boolean - true - стили прочитались без ошибок
 
-function ZEXSLXReadStyles(var XMLSS: TZWorkBook; var Stream: TStream; var ThemaFillsColors: TIntegerDynArray; var ThemaColorCount: Integer; var MaximumDigitWidth: double; ReadHelper: TZEXLSXReadHelper): Boolean;
+function ZEXSLXReadStyles(var XMLSS: TZWorkBook; var Stream: TStream; var ThemaFillsColors: TIntegerDynArray; var ThemaColorCount: Integer; ReadHelper: TZEXLSXReadHelper): Boolean;
 type
   TZXLSXBorderItem = record
     Color: TColor;
@@ -4076,7 +4045,6 @@ var
 
 begin
   Result := false;
-  MaximumDigitWidth := 0;
   Xml := nil;
   CellXfsArray := nil;
   CellStyleArray := nil;
@@ -4100,22 +4068,12 @@ begin
       Xml.ReadTag();
 
       if Xml.IsTagStartByName('fonts') then
-      begin
-        _ReadFonts();
-        if length(FontArray) > 0 then
-          MaximumDigitWidth := GetMaximumDigitWidth(FontArray[0].name, FontArray[0].fontsize);
-      end
+        _ReadFonts()
       else if Xml.IsTagStartByName('borders') then
         _ReadBorders()
       else if Xml.IsTagStartByName('fills') then
         _ReadFills()
-      else
-      {
-        А.А.Валуев:
-        Элементы внутри cellXfs ссылаются на элементы внутри cellStyleXfs.
-        Элементы внутри cellStyleXfs ни на что не ссылаются.
- }
-          if Xml.IsTagStartByName('cellStyleXfs') then
+      else if Xml.IsTagStartByName('cellStyleXfs') then
         _ReadCellCommonStyles('cellStyleXfs', CellStyleArray, CellStyleCount) // _ReadCellStyleXfs()
       else if Xml.IsTagStartByName('cellXfs') then // сами стили?
         _ReadCellCommonStyles('cellXfs', CellXfsArray, CellXfsCount) // _ReadCellXfs()
@@ -4128,8 +4086,6 @@ begin
       else if Xml.IsTagStartByName('numFmts') then
         ReadHelper.NumberFormats.ReadNumFmts(Xml);
     end; // while
-
-    // тут незабыть применить номера цветов, если были введены
 
     _CheckIndexedColors();
 
@@ -4739,7 +4695,7 @@ begin
         begin
           FreeAndNil(Stream);
           Stream := TFileStream.Create(DirName + FileArray[i].name, fmOpenRead or fmShareDenyNone);
-          if (not ZEXSLXReadStyles(XMLSS, Stream, ThemaColor, ThemaColorCount, MaximumDigitWidth, RH)) then
+          if (not ZEXSLXReadStyles(XMLSS, Stream, ThemaColor, ThemaColorCount, RH)) then
           begin
             Result := 5;
             exit;
@@ -5088,7 +5044,7 @@ begin
         begin
           Zip.Read(FileArray[i].original.Substring(1), Stream, zipHdr);
           try
-            if (not ZEXSLXReadStyles(XMLSS, Stream, ThemaColor, ThemaColorCount, MaximumDigitWidth, RH)) then
+            if (not ZEXSLXReadStyles(XMLSS, Stream, ThemaColor, ThemaColorCount, RH)) then
             begin
               Result := 5;
               exit;
@@ -5717,11 +5673,7 @@ var
     i: Integer;
     s: string;
     ProcessedColumn: TZColOptions;
-    MaximumDigitWidth: double;
-    NumberOfCharacters: double;
-    width: real;
   begin
-    MaximumDigitWidth := GetMaximumDigitWidth(XMLSS.Styles[0].Font.name, XMLSS.Styles[0].Font.Size);
     // Если совсем нет стилей, пусть будет ошибка.
     Xml.Attributes.Clear();
     Xml.WriteTagNode('cols', true, true, true);
@@ -5737,13 +5689,7 @@ var
       if ((ProcessedColumn.StyleID >= -1) and (ProcessedColumn.StyleID < XMLSS.Styles.Count)) then
         s := IntToStr(ProcessedColumn.StyleID + 1);
       Xml.Attributes.Add('style', s, false);
-      // xml.Attributes.Add('width', ZEFloatSeparator(FormatFloat('0.##########', ProcessedColumn.WidthMM * 5.14509803921569 / 10)), false);
-      // А.А.Валуев. Формулы расёта ширины взяты здесь - https://c-rex.net/projects/samples/ooxml/e1/Part4/OOXML_P4_DOCX_col_topic_ID0ELFQ4.html
-      // А.А.Валуев. Получаем ширину в символах в Excel-е.
-      NumberOfCharacters := Trunc((ProcessedColumn.WidthPix - 5) / MaximumDigitWidth * 100 + 0.5) / 100;
-      // А.А.Валуев. Конвертируем ширину в символах в ширину для сохранения в файл.
-      width := Trunc((NumberOfCharacters * MaximumDigitWidth + 5) / MaximumDigitWidth * 256) / 256;
-      Xml.Attributes.Add('width', ZEFloatSeparator(FormatFloat('0.##########', width)), false);
+      Xml.Attributes.Add('width', ZEFloatSeparator(FormatFloat('0.##########', ProcessedColumn.WidthMM * 5.14509803921569 / 10)), false);
       if ProcessedColumn.AutoFitWidth then
         Xml.Attributes.Add('bestFit', '1', false);
       if sheet.Columns[i].OutlineLevel > 0 then
@@ -8397,7 +8343,7 @@ procedure TExcel4DelphiReader.ReadWorkBook(AStream: TStream);
 var
   Xml: TZsspXMLReaderH;
   // s: string;
-  { i, t, }                         dn: Integer;
+  { i, t, }                           dn: Integer;
 begin
   Xml := TZsspXMLReaderH.Create();
   try

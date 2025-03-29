@@ -3795,7 +3795,7 @@ end;
 constructor TZRowOptions.Create(ASheet: TZSheet);
 begin
   inherited Create(ASheet);
-  FSize := 48;
+  FSize := 12.75;
 end;
 
 function TZRowOptions.GetSizePix(): Integer;
@@ -3825,7 +3825,7 @@ end;
 constructor TZColOptions.Create(ASheet: TZSheet);
 begin
   inherited Create(ASheet);
-  FSize := 12.75;
+  FSize := 48;
 end;
 
 function TZColOptions.GetSizePix(): Integer;
