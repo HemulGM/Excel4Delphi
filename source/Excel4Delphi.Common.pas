@@ -20,7 +20,9 @@ type
 
 // Попытка преобразовать строку в число
 function ZEIsTryStrToFloat(const st: string; out retValue: double): boolean;
+
 function ZETryStrToFloat(const st: string; valueIfError: double = 0): double; overload;
+
 function ZETryStrToFloat(const st: string; out isOk: boolean; valueIfError: double = 0): double; overload;
 
 // Попытка преобразовать строку в boolean
@@ -30,9 +32,7 @@ function ZETryStrToBoolean(const st: string; valueIfError: boolean = false): boo
 function ZEFloatSeparator(st: string): string;
 
 // Проверяет заголовки страниц, при необходимости корректирует
-function ZECheckTablesTitle(var XMLSS: TZWorkBook; const SheetsNumbers: array of integer;
-  const SheetsNames: array of string; out _pages: TIntegerDynArray; out _names: TStringDynArray;
-  out retCount: integer): boolean;
+function ZECheckTablesTitle(var XMLSS: TZWorkBook; const SheetsNumbers: array of integer; const SheetsNames: array of string; out _pages: TIntegerDynArray; out _names: TStringDynArray; out retCount: integer): boolean;
 
 // Очищает массивы
 procedure ZESClearArrays(var _pages: TIntegerDynArray; var _names: TStringDynArray);
@@ -71,9 +71,9 @@ begin
   tempName := TPath.GetTempFileName();
   if tempName <> '' then
   begin
-    {$IFDEF MSWINDOWS}
+    {$IFDEF VCL}
     Result := CreateFile(PChar(tempName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING,
-      FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
+        FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
     {$ELSE}
     Result := FileCreate(tempName, fmCreate);
     {$ENDIF}
@@ -123,7 +123,7 @@ begin
     if A > 90 then
       A := A - 180; // 91..180 -> -89..0 (* 90, 90, 90, 0, 0, -45 *)
     Result := A;
-    If Neg then
+    if Neg then
       Result := -Result; (* -90, +90, -90, 0, 0, -45 *)
   end;
 end;
@@ -134,7 +134,7 @@ end;
 function ZENormalizeAngle180(const value: TZCellTextRotate): integer;
 begin
   Result := ZENormalizeAngle90(value);
-  If Result < 0 then
+  if Result < 0 then
     Result := 90 - Result;
 end;
 
@@ -151,6 +151,7 @@ end; // ZEReplaceEntity
 // Переводит строку в boolean
 // INPUT
 // const val: string - переводимая строка
+
 function ZEStrToBoolean(const val: string): boolean;
 begin
   if (val = '1') or (UpperCase(val) = 'TRUE') then
@@ -212,6 +213,7 @@ end; // ZETryStrToFloat
 // INPUT
 // const st: string        - строка
 // valueIfError: double  - значение, которое подставляется при ошибке преобразования
+
 function ZETryStrToFloat(const st: string; valueIfError: double = 0): double;
 var
   s: string;
@@ -235,6 +237,7 @@ begin
 end; // ZETryStrToFloat
 
 // заменяет все запятые на точки
+
 function ZEFloatSeparator(st: string): string;
 var
   k: integer;
@@ -303,6 +306,7 @@ end; // ZECorrectStrForSave
 // делаем уникальные значения массивов
 // INPUT
 // var mas: array of string - массив со значениями
+
 procedure ZECorrectTitles(var mas: array of string);
 var
   i, num, k, _kol: integer;
@@ -339,12 +343,12 @@ end; // CorrectTitles
 // RETURN
 // boolean - true - всё нормально, можно продолжать дальше
 // false - что-то не то подсунули, дальше продолжать нельзя
-function ZECheckTablesTitle(var XMLSS: TZWorkBook; const SheetsNumbers: array of integer;
-  const SheetsNames: array of string; out _pages: TIntegerDynArray; out _names: TStringDynArray;
-  out retCount: integer): boolean;
+
+function ZECheckTablesTitle(var XMLSS: TZWorkBook; const SheetsNumbers: array of integer; const SheetsNames: array of string; out _pages: TIntegerDynArray; out _names: TStringDynArray; out retCount: integer): boolean;
 var
   t1, t2, i: integer;
   // '!' is allowed; ':' is not; whatever else ?
+
   procedure SanitizeTitle(var s: string);
   var
     i: integer;
@@ -354,6 +358,7 @@ var
       if s[i] = ':' then
         s[i] := ';';
   end;
+
   function CoalesceTitle(const i: integer; const checkArray: boolean): string;
   begin
     if checkArray then
@@ -438,3 +443,4 @@ begin
 end; // ZECheckTablesTitle
 
 end.
+

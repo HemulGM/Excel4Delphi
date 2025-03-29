@@ -15,18 +15,21 @@ const
   ZE_ATR_DEL_PREFIX = 1; // Удалять все символы до первого '='
 
 function ZEGetA1byCol(ColNum: integer; StartZero: boolean = true): string;
+
 function ZERangeToRow(range: string): integer;
+
 function ZEGetColByA1(AA: string; StartZero: boolean = true): integer;
-function ZER1C1ToA1(const Formula: string; CurCol, CurRow: integer; options: integer;
-  StartZero: boolean = true): string;
-function ZEA1ToR1C1(const Formula: string; CurCol, CurRow: integer; options: integer;
-  StartZero: boolean = true): string;
+
+function ZER1C1ToA1(const Formula: string; CurCol, CurRow: integer; options: integer; StartZero: boolean = true): string;
+
+function ZEA1ToR1C1(const Formula: string; CurCol, CurRow: integer; options: integer; StartZero: boolean = true): string;
+
 function ZEGetCellCoords(const cell: string; out column, row: integer; StartZero: boolean = true): boolean;
 
 implementation
 
 const
-  ZE_STR_ARRAY: array [0 .. 25] of char = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+  ZE_STR_ARRAY: array[0..25] of char = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
     'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z');
 
 // Получает номер строки и столбца по строковому значению (для A1 стилей)
@@ -43,7 +46,6 @@ var
   s1, s2: string;
   _isOk: boolean;
   b: boolean;
-
 begin
   _isOk := true;
   s1 := '';
@@ -51,12 +53,12 @@ begin
   b := false;
   for i := 1 to length(cell) do
     case cell[i] of
-      'A' .. 'Z', 'a' .. 'z':
+      'A'..'Z', 'a'..'z':
         begin
           s1 := s1 + cell[i];
           b := true;
         end;
-      '0' .. '9':
+      '0'..'9':
         begin
           if (not b) then
           begin
@@ -97,6 +99,7 @@ end; // ZEGetCellCoords
 // StartZero: boolean  - признак нумерации с нуля
 // RETURN
 // string - номер ячейки в стиле A1
+
 function ReturnA1(const st: string; CurCol, CurRow: integer; options: integer; StartZero: boolean = true): string;
 var
   s: string;
@@ -119,6 +122,7 @@ var
   _use_bracket: boolean;
 
   // Возвращает строку
+
   procedure _getR(num: integer);
   begin
     if (isSq or (num = 0)) then
@@ -135,6 +139,7 @@ var
   end; // _getR
 
   // Возвращает столбец
+
   procedure _getC(num: integer);
   begin
     if (isSq or (num = 0)) then
@@ -151,6 +156,7 @@ var
   end; // _getС
 
   // Проверяет символ
+
   procedure _checksymbol(ch: char);
   begin
     if (isApos) then
@@ -165,9 +171,9 @@ var
     begin
       if (isNumber) then
       begin
-        if (not CharInSet(ch, ['-', '0' .. '9', ']', '[', ''''])) then
+        if (not CharInSet(ch, ['-', '0'..'9', ']', '[', ''''])) then
         begin
-          if (not(isC xor isR)) then
+          if (not (isC xor isR)) then
           begin
             isOk := false;
             exit;
@@ -234,7 +240,7 @@ var
           s := '';
           isDelim := false;
         end;
-      '-', '0' .. '9':
+      '-', '0'..'9':
         begin
           s := s + ch;
           if (isC or isR) then
@@ -259,6 +265,8 @@ var
         isOk := false; // O_o - вроде как не ячейка, выходим и возвращаем всё как есть
     end; // case
   end; // _checksymbol
+
+
 
 begin
   result := '';
@@ -303,7 +311,7 @@ begin
     exit;
   end;
   result := retTxt + _c + _r + s;
-  _use_bracket := not(options and ZE_RTA_ODF_NO_BRACKET = ZE_RTA_ODF_NO_BRACKET);
+  _use_bracket := not (options and ZE_RTA_ODF_NO_BRACKET = ZE_RTA_ODF_NO_BRACKET);
   if (isODF and _use_bracket) then
   begin
     if (not isList) then
@@ -323,8 +331,8 @@ end; // ReturnA1
 // StartZero: boolean- при true счёт строки/ячейки начинается с 0.
 // RETURN
 // string  - текст формулы в стиле R1C1
-function ZER1C1ToA1(const Formula: string; CurCol, CurRow: integer; options: integer;
-  StartZero: boolean = true): string;
+
+function ZER1C1ToA1(const Formula: string; CurCol, CurRow: integer; options: integer; StartZero: boolean = true): string;
 var
   kol: integer;
   i: integer;
@@ -371,13 +379,13 @@ var
       '[':
         begin
           s := s + ch;
-          if (not(isQuote or isApos)) then
+          if (not (isQuote or isApos)) then
             isSq := true;
         end;
       ']':
         begin
           s := s + ch;
-          if (not(isQuote or isApos)) then
+          if (not (isQuote or isApos)) then
             isSq := false;
         end;
       ':', ';', ' ', '-', '%', '^', '*', '/', '+', '&', '<', '>', '(', ')', '=': // разделители
@@ -396,6 +404,8 @@ var
       s := s + ch;
     end;
   end; // _checksymbol
+
+
 
 begin
   result := '';
@@ -432,6 +442,7 @@ end; // ZER1C1ToA1
 // StartZero: boolean  - признак нумерации с нуля
 // RETURN
 // string - номер ячейки в стиле R1C1
+
 function ReturnR1C1(const st: string; CurCol, CurRow: integer; StartZero: boolean = true): string;
 var
   i: integer;
@@ -481,7 +492,7 @@ var
 
   procedure _checksymbol(ch: char);
   begin
-    if (not CharInSet(ch, ['0' .. '9'])) then
+    if (not CharInSet(ch, ['0'..'9'])) then
       if (not isApos) then
       begin
         if (_startNumber) then
@@ -569,7 +580,7 @@ var
           begin
           end;
         end;
-      '0' .. '9':
+      '0'..'9':
         begin
           if (isApos) then
             s := s + ch
@@ -591,6 +602,7 @@ var
   end; // _CheckSymbol
 
   // Проверяет, с какого символа в строке начать
+
   procedure FindStartNumber(out num: integer);
   var
     i: integer;
@@ -616,6 +628,8 @@ var
       end; // case
     s := '';
   end; // FindStartNumber
+
+
 
 begin
   result := '';
@@ -656,8 +670,8 @@ end; // ReturnR1C1
 // StartZero: boolean- при true счёт строки/ячейки начинается с 0.
 // RETURN
 // string  - текст формулы в стиле R1C1
-function ZEA1ToR1C1(const Formula: string; CurCol, CurRow: integer; options: integer;
-  StartZero: boolean = true): string;
+
+function ZEA1ToR1C1(const Formula: string; CurCol, CurRow: integer; options: integer; StartZero: boolean = true): string;
 var
   i, l: integer;
   s: string;
@@ -670,11 +684,12 @@ var
   // Проверить символ
   // INPUT
   // const ch: char - символ для проверки
+
   procedure _checksymbol(const ch: char);
   begin
     case ch of
       '"':
-        begin;
+        begin
           if (isApos) then
             s := s + ch
           else
@@ -733,6 +748,8 @@ var
       end;
   end; // FindStartNum
 
+
+
 begin
   result := '';
   l := length(Formula);
@@ -766,7 +783,7 @@ var
 begin
   for i := 1 to length(range) - 1 do
   begin
-    if CharInSet(range.Chars[i], ['0' .. '9']) then
+    if CharInSet(range.Chars[i], ['0'..'9']) then
     begin
       exit(StrToInt(range.Substring(i)));
     end;
@@ -792,7 +809,7 @@ begin
   s := 1;
   for i := kol downto 1 do
   begin
-    if not CharInSet(AA[i], ['A' .. 'Z']) then
+    if not CharInSet(AA[i], ['A'..'Z']) then
       continue;
     t := ord(AA[i]) - ord('A');
     num := num + (t + 1) * s;
@@ -809,6 +826,7 @@ end; // ZEGetColByAA
 // INPUT
 // ColNum: integer     - номер столбца
 // StartZero: boolean  - если true, то счёт начинается с 0, в противном случае - с 1.
+
 function ZEGetA1byCol(ColNum: integer; StartZero: boolean = true): string;
 var
   t, n: integer;
@@ -831,3 +849,4 @@ begin
 end; // ZEGetAAbyCol
 
 end.
+

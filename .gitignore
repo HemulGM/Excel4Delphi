@@ -59,3 +59,6 @@
 **/__recovery/*
 **/__astcache/*
 _Help/*
+/source/*.o
+/packages/*.a
+/packages/*.o
